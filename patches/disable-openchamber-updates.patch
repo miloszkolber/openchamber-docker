@@ -1,0 +1,25 @@
+diff --git a/server/lib/package-manager.js b/server/lib/package-manager.js
+--- a/server/lib/package-manager.js
++++ b/server/lib/package-manager.js
+@@ -771,3 +771,12 @@ export async function checkForUpdates(options = {}) {
++  if (process.env.OPENCHAMBER_DISABLE_UPDATE === 'true') {
++    const currentVersion = options.currentVersion || getCurrentVersion();
++    return {
++      available: false,
++      currentVersion,
++      version: currentVersion,
++      disabled: true,
++    };
++  }
+   const currentVersion = options.currentVersion || getCurrentVersion();
+   const pm = detectPackageManager();
+   const appType = normalizeAppType(options.appType);
+@@ -829,4 +838,8 @@ export async function checkForUpdates(options = {}) {
+ export function executeUpdate(pm = detectPackageManager(), options = {}) {
++  if (process.env.OPENCHAMBER_DISABLE_UPDATE === 'true') {
++    return { success: false, exitCode: 1, disabled: true };
++  }
++
+   const command = getUpdateCommand(pm);
+   if (!options?.silent) {
+     console.log(`Updating ${PACKAGE_NAME} using ${pm}...`);

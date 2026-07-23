@@ -1,0 +1,7 @@
+.git
+.github
+.env*
+data
+workspaces
+README.md
+docker-compose.yaml
