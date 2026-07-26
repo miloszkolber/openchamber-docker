@@ -7,8 +7,6 @@ services:
         user: "1000:1000"
         group_add:
             - "${DOCKER_GID:-109}"
-        privileged: true
-        pid: host
         env_file:
             - path: .env
               required: false

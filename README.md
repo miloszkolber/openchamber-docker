@@ -24,7 +24,7 @@ docker compose up -d
 
 Open `http://localhost:4098`.
 
-The sample Compose file uses host networking, the host PID namespace, privileged mode, and the Docker socket. The process remains UID 1000, but these settings provide extensive host access and are intended only for trusted workloads.
+The sample Compose file uses host networking and the Docker socket. The process remains UID 1000; Docker socket access still provides extensive host control, so this is intended only for trusted workloads.
 
 Add project or data mounts in a local Compose override as needed.
 
