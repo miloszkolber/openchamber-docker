@@ -1,10 +1,15 @@
 # syntax=docker/dockerfile:1.7
 
+ARG ALPINE_VERSION=3.22
+ARG ALPINE_IMAGE_DIGEST=sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
 ARG BUN_VERSION=1.3.14
+ARG BUN_IMAGE_DIGEST=sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0
+ARG DOCKER_VERSION=29.6.2
+ARG DOCKER_IMAGE_DIGEST=sha256:be132a9f282288de4afaf63379dff75711fda0147c6b72a9df44e51841402144
 
-FROM docker.io/library/docker:29.6.2-cli AS docker-cli
+FROM docker.io/library/docker:${DOCKER_VERSION}-cli@${DOCKER_IMAGE_DIGEST} AS docker-cli
 
-FROM docker.io/oven/bun:${BUN_VERSION}-alpine AS openchamber-package
+FROM docker.io/oven/bun:${BUN_VERSION}-alpine@${BUN_IMAGE_DIGEST} AS openchamber-package
 
 ARG OPENCHAMBER_VERSION
 ARG OPENCHAMBER_PACKAGE_SHA256
@@ -24,7 +29,7 @@ RUN curl --fail --location --retry 3 \
     && patch -p1 < /tmp/disable-openchamber-updates.patch \
     && bun install --production --ignore-scripts
 
-FROM docker.io/library/alpine:3.22 AS opencode-download
+FROM docker.io/library/alpine:${ALPINE_VERSION}@${ALPINE_IMAGE_DIGEST} AS opencode-download
 
 ARG OPENCODE_VERSION
 ARG OPENCODE_AMD64_SHA256
@@ -37,7 +42,7 @@ RUN apk add --no-cache ca-certificates curl libstdc++ \
     && tar -xzf /tmp/opencode.tar.gz -C /usr/local/bin \
     && chmod 0755 /usr/local/bin/opencode
 
-FROM docker.io/oven/bun:${BUN_VERSION}-alpine
+FROM docker.io/oven/bun:${BUN_VERSION}-alpine@${BUN_IMAGE_DIGEST}
 
 ARG OPENCHAMBER_VERSION
 ARG OPENCODE_VERSION
@@ -45,7 +50,9 @@ ARG VCS_REF
 
 LABEL org.opencontainers.image.title="OpenChamber with managed OpenCode" \
       org.opencontainers.image.description="OpenChamber web interface with managed OpenCode and host Docker access" \
+      org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.source="https://github.com/miloszkolber/openchamber-docker" \
+      org.opencontainers.image.url="https://github.com/miloszkolber/openchamber-docker" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.version="${OPENCHAMBER_VERSION}+${OPENCODE_VERSION}" \
       io.openchamber.version="${OPENCHAMBER_VERSION}" \
@@ -56,7 +63,9 @@ RUN apk add --no-cache \
         ca-certificates \
         curl \
         git \
+        jq \
         libstdc++ \
+        ripgrep \
         tini \
     && deluser bun \
     && addgroup -g 1000 openchamber \

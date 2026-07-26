@@ -2,7 +2,7 @@
 
 An AMD64 container for running the [OpenChamber](https://openchamber.dev) web interface with a bundled, managed [OpenCode](https://opencode.ai) server.
 
-The image uses OpenChamber's verified web release package and OpenCode's verified Alpine binary. It also includes Git, Docker CLI, and Docker Compose for coding and container workflows. Both applications' self-update mechanisms are disabled; GitHub Actions publishes a new image when either upstream project releases a stable version.
+The image uses OpenChamber's verified web release package and OpenCode's verified Alpine binary. It also includes Git, Docker CLI, Docker Compose, jq, and ripgrep for coding and container workflows. Both applications' self-update mechanisms are disabled; GitHub Actions publishes a new image when either upstream project releases a stable version.
 
 ## Features
 
@@ -50,5 +50,6 @@ ghcr.io/miloszkolber/openchamber-docker:<openchamber-version>_<opencode-version>
 ```
 
 The OCI image version uses `<openchamber-version>+<opencode-version>`. Docker tags use `_` because `+` is not valid in a Docker tag.
+The five newest versioned releases are retained for rollback, along with `latest`.
 
 This project is not affiliated with OpenChamber or OpenCode. Each upstream project retains its own license and trademarks.

@@ -87,28 +87,31 @@ jobs:
                   provenance: mode=max
                   sbom: true
 
-            - name: Remove superseded package versions
+            - name: Remove obsolete package versions
               if: steps.decision.outputs.build == 'true'
               env:
-                  CURRENT_TAG: ${{ env.OPENCHAMBER_VERSION }}_${{ env.OPENCODE_VERSION }}
                   GH_OWNER: ${{ github.repository_owner }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  KEEP_RELEASES: "5"
               run: |
-                  gh api --paginate --slurp \
+                  gh api --paginate \
                       "/users/$GH_OWNER/packages/container/openchamber-docker/versions?per_page=100" \
-                      > /tmp/package-versions.json
+                      | jq -s '.' > /tmp/package-versions.json
 
                   while read -r version_id; do
                       [[ -n "$version_id" ]] || continue
                       gh api --method DELETE \
                           "/users/$GH_OWNER/packages/container/openchamber-docker/versions/$version_id"
                   done < <(
-                      jq -r --arg current "$CURRENT_TAG" \
+                      jq -r --argjson keep "$KEEP_RELEASES" \
                           '[.[][]] as $versions |
-                           ($versions | map(select((.metadata.container.tags // []) | index($current))) |
-                            first | .created_at | fromdateiso8601) as $current_time |
+                           ($versions |
+                            map(select((.metadata.container.tags // []) |
+                                any(test("^[0-9]+\\.[0-9]+\\.[0-9]+_[0-9]+\\.[0-9]+\\.[0-9]+$")))) |
+                            sort_by(.created_at) | reverse | .[:$keep] | last |
+                            .created_at // empty | fromdateiso8601) as $oldest_retained |
                            $versions[] |
-                           select((.created_at | fromdateiso8601) < ($current_time - 600)) |
+                           select((.created_at | fromdateiso8601) < ($oldest_retained - 600)) |
                            .id' \
                           /tmp/package-versions.json
                   )
@@ -119,5 +122,5 @@ jobs:
                   git config user.name github-actions[bot]
                   git config user.email 41898282+github-actions[bot]@users.noreply.github.com
                   git add versions.env
-                  git commit -m "chore: update upstream versions"
+                  git commit -m "chore: update upstream versions [skip ci]"
                   git push
